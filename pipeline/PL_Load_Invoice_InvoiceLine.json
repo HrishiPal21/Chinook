@@ -1,0 +1,92 @@
+{
+	"name": "PL_Load_Invoice_InvoiceLine",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachInvoice",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.table_list",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy_Table_To_Snowflake",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "00:10:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 60,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@{concat('SELECT * FROM ', item())}",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "SnowflakeV2Sink",
+									"importSettings": {
+										"type": "SnowflakeImportCopyCommand"
+									}
+								},
+								"enableStaging": true,
+								"stagingSettings": {
+									"linkedServiceName": {
+										"referenceName": "is_sas_storage_2",
+										"type": "LinkedServiceReference"
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "sql_server_workshop_ch",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema_name": "chinook"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SnowflakeChinookDB",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema_name": "STAGE",
+										"table_name": {
+											"value": "@toUpper(split(item(), '.')[1])",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"table_list": {
+				"type": "array",
+				"defaultValue": [
+					"chinook.Invoice",
+					"chinook.InvoiceLine"
+				]
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-10-15T03:29:03Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

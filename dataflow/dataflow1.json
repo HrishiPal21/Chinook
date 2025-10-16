@@ -1,0 +1,102 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "SnowflakeChinookDB",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerStage"
+				},
+				{
+					"dataset": {
+						"referenceName": "SnowflakeChinookDB",
+						"type": "DatasetReference"
+					},
+					"name": "sourceCustomerDIM"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "SnowflakeChinookDB",
+						"type": "DatasetReference"
+					},
+					"name": "sinkCustomerDim"
+				}
+			],
+			"transformations": [
+				{
+					"name": "joinSourceTgt"
+				},
+				{
+					"name": "RowChanges"
+				},
+				{
+					"name": "derivedColumn1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          CUSTOMERID as decimal(38,0),",
+				"          FIRSTNAME as string,",
+				"          LASTNAME as string,",
+				"          COMPANY as string,",
+				"          ADDRESS as string,",
+				"          CITY as string,",
+				"          STATE as string,",
+				"          COUNTRY as string,",
+				"          POSTALCODE as string,",
+				"          PHONE as string,",
+				"          FAX as string,",
+				"          EMAIL as string,",
+				"          SUPPORTREPID as decimal(38,0)",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table') ~> CustomerStage",
+				"source(output(",
+				"          CUSTOMER_KEY as decimal(10,0),",
+				"          CUSTOMER_ID as decimal(10,0),",
+				"          FIRST_NAME as string,",
+				"          LAST_NAME as string,",
+				"          COMPANY_NAME as string,",
+				"          CITY as string,",
+				"          STATE as string,",
+				"          COUNTRY as string,",
+				"          ZIP_CODE as string,",
+				"          EMPLOYEE_ID as decimal(10,0),",
+				"          IS_ACTIVE as string,",
+				"          SOURCE_ID as string,",
+				"          DATE_TO_WAREHOUSE as timestamp,",
+				"          HASH_VAL as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table') ~> sourceCustomerDIM",
+				"CustomerStage, sourceCustomerDIM join(CUSTOMERID == CUSTOMER_ID,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinSourceTgt",
+				"derivedColumn1 alterRow(updateIf(CUSTOMERID==CUSTOMER_ID),",
+				"     insertIf(iifNull(CUSTOMER_ID,0,CUSTOMER_ID)==0)) ~> RowChanges",
+				"joinSourceTgt derive(source_hash_value = 0) ~> derivedColumn1",
+				"RowChanges sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['CUSTOMER_KEY'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     stageInsert: true) ~> sinkCustomerDim"
+			]
+		}
+	}
+}

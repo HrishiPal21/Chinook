@@ -1,0 +1,9 @@
+{
+	"name": "adf-chinook-hrishi",
+	"location": "westus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "90c6a819-1c78-44cd-b927-6afbc728cf1e",
+		"tenantId": "a8eec281-aaa3-4dae-ac9b-9a398b9215e7"
+	}
+}

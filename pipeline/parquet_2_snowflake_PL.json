@@ -1,0 +1,107 @@
+{
+	"name": "parquet_2_snowflake_PL",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachTables",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.table_name",
+						"type": "Expression"
+					},
+					"batchCount": 2,
+					"activities": [
+						{
+							"name": "parquet_2_Snow_Stage",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "00:10:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 60,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "ParquetReadSettings"
+									}
+								},
+								"sink": {
+									"type": "SnowflakeV2Sink",
+									"importSettings": {
+										"type": "SnowflakeImportCopyCommand"
+									}
+								},
+								"enableStaging": true,
+								"stagingSettings": {
+									"linkedServiceName": {
+										"referenceName": "is_sas_storage_2",
+										"type": "LinkedServiceReference"
+									},
+									"path": "stagedata"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "Parquet_ds",
+									"type": "DatasetReference",
+									"parameters": {
+										"container_name": "stagedata",
+										"folder_name": {
+											"value": "@pipeline().parameters.folder_name",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@concat(\n    item(),\n    '.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SnowflakeChinookDB",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema_name": "STAGE",
+										"table_name": {
+											"value": "@toUpper(item())",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"folder_name": {
+				"type": "string"
+			},
+			"table_name": {
+				"type": "array",
+				"defaultValue": [
+					"chinook.Invoice",
+					"chinook.InvoiceLine"
+				]
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-10-15T02:10:25Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

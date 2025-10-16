@@ -1,0 +1,12 @@
+{
+	"name": "sql_server_blob",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobStorage",
+		"typeProperties": {
+			"serviceEndpoint": "https://stchinookhrishi.blob.core.windows.net/",
+			"accountKind": "StorageV2"
+		}
+	}
+}
